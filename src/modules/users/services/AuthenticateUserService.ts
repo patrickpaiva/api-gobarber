@@ -1,10 +1,10 @@
 import { injectable, inject } from 'tsyringe';
-import User from '@modules/users/infra/typeorm/entities/User';
 import { sign } from 'jsonwebtoken';
 
 import AppError from '@shared/errors/AppError';
 
 import authConfig from '@config/auth';
+import User from '@modules/users/infra/typeorm/entities/User';
 import IUsersRepository from '../repositories/IUsersRepository';
 import IHashProvider from '../providers/HashProvider/models/IHashProvider';
 
@@ -30,7 +30,6 @@ class AuthenticateUserService {
 
     public async execute({ email, password }: IRequest): Promise<IResponse> {
         const user = await this.usersRepository.findByEmail(email);
-        console.log(this.hashProvider);
 
         if (!user) {
             throw new AppError('Incorret email/password combination.', 401);
