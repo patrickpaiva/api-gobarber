@@ -36,6 +36,7 @@ jobs:
       - name: Run build
         run: yarn build
         
+      # Copiar pasta dist pra dentrod a Digital Ocean
       - name: Copy dist to Digital Ocean
         uses: appleboy/scp-action@master
         with:
@@ -44,13 +45,40 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "."
+          source: ".,!node_modules"
           target: "~/app/iniciando-back-end"
       
-      # Copiar pasta dist pra dentrod a Digital Ocean
-        
-      # Substituir o código existente na pasta "dist" pelo novo código
-      # Executar "yarn" na Digital Ocean
-      # Executar as migrations do TypeOrm
-      # Restart no servidor Node.js
+      - name: Install dependencies on DO
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: |
+            cd ~/app/iniciando-back-end
+            yarn
+         
+      - name: Run migrations on DO
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: |
+            cd ~/app/iniciando-back-end
+            ./node_modules/.bin/typeorm migration:run
+      
 
+      - name: Restart Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: pm2 restart gobarber-api
